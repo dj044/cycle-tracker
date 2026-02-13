@@ -13,224 +13,217 @@
   <meta name="apple-mobile-web-app-title" content="Cycle Tracker">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
 
- <style>
-  :root{
-    --bg1:#fff7fb;
-    --bg2:#f4f7ff;
-    --card: rgba(255,255,255,.78);
-    --stroke: rgba(20,20,20,.08);
-    --text:#111;
-    --muted:#5a5a5a;
-    --shadow: 0 18px 50px rgba(0,0,0,.08);
-    --shadow2: 0 8px 22px rgba(0,0,0,.06);
-    --radius: 22px;
-  }
+  <style>
+    :root{
+      --bg1:#fff7fb;
+      --bg2:#f4f7ff;
+      --card: rgba(255,255,255,.78);
+      --stroke: rgba(20,20,20,.08);
+      --text:#111;
+      --muted:#5a5a5a;
+      --shadow: 0 18px 50px rgba(0,0,0,.08);
+      --shadow2: 0 8px 22px rgba(0,0,0,.06);
+      --radius: 22px;
+    }
 
-  *{ box-sizing:border-box; }
-  body{
-    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
-    margin:0;
-    color:var(--text);
-    background:
-      radial-gradient(1200px 800px at 15% 10%, var(--bg1), transparent 55%),
-      radial-gradient(1200px 800px at 90% 25%, var(--bg2), transparent 55%),
-      linear-gradient(#fbfbfb, #f7f7f7);
-    min-height:100vh;
-  }
+    *{ box-sizing:border-box; }
+    body{
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      margin:0;
+      color:var(--text);
+      background:
+        radial-gradient(1200px 800px at 15% 10%, var(--bg1), transparent 55%),
+        radial-gradient(1200px 800px at 90% 25%, var(--bg2), transparent 55%),
+        linear-gradient(#fbfbfb, #f7f7f7);
+      min-height:100vh;
+    }
 
-  .wrap{
-    max-width: 860px;
-    margin:0 auto;
-    padding: 22px 16px 28px;
-  }
+    .wrap{
+      max-width: 860px;
+      margin:0 auto;
+      padding: 22px 16px 28px;
+    }
 
-  .card{
-    background: var(--card);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid var(--stroke);
-    border-radius: var(--radius);
-    padding: 18px;
-    box-shadow: var(--shadow);
-  }
+    .card{
+      background: var(--card);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--stroke);
+      border-radius: var(--radius);
+      padding: 18px;
+      box-shadow: var(--shadow);
+    }
 
-  h1{
-    font-size: 22px;
-    letter-spacing: -0.02em;
-    margin: 0 0 6px;
-  }
+    h1{
+      font-size: 22px;
+      letter-spacing: -0.02em;
+      margin: 0 0 6px;
+    }
 
-  .muted{
-    color: var(--muted);
-    font-size: 13px;
-    line-height: 1.4;
-  }
+    .muted{
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.4;
+    }
 
-  h2{
-    font-size: 14px;
-    letter-spacing: 0.02em;
-    text-transform: uppercase;
-    color: #333;
-    margin: 18px 0 10px;
-    display:flex;
-    align-items:center;
-    gap:8px;
-  }
+    h2{
+      font-size: 14px;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+      color: #333;
+      margin: 18px 0 10px;
+      display:flex;
+      align-items:center;
+      gap:8px;
+    }
 
-  h2:before{
-    content:"";
-    width:10px;
-    height:10px;
-    border-radius:50%;
-    background: linear-gradient(135deg, #ff6fae, #7a8dff);
-    box-shadow: 0 6px 16px rgba(255,111,174,.25);
-    display:inline-block;
-  }
+    h2:before{
+      content:"";
+      width:10px;
+      height:10px;
+      border-radius:50%;
+      background: linear-gradient(135deg, #ff6fae, #7a8dff);
+      box-shadow: 0 6px 16px rgba(255,111,174,.25);
+      display:inline-block;
+    }
 
-  label{
-    display:block;
-    font-size: 12.5px;
-    margin: 10px 0 6px;
-    color:#333;
-  }
+    label{
+      display:block;
+      font-size: 12.5px;
+      margin: 10px 0 6px;
+      color:#333;
+    }
 
-  input, button{
-    width:100%;
-    font-size: 15px;
-    padding: 12px 12px;
-    border-radius: 14px;
-    border: 1px solid rgba(0,0,0,.12);
-    background: rgba(255,255,255,.92);
-    outline:none;
-  }
+    input, button{
+      width:100%;
+      font-size: 15px;
+      padding: 12px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(0,0,0,.12);
+      background: rgba(255,255,255,.92);
+      outline:none;
+    }
 
-  input:focus{
-    border-color: rgba(122,141,255,.65);
-    box-shadow: 0 0 0 4px rgba(122,141,255,.14);
-  }
+    input:focus{
+      border-color: rgba(122,141,255,.65);
+      box-shadow: 0 0 0 4px rgba(122,141,255,.14);
+    }
 
-  .grid{
-    display:grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-  }
+    .grid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
 
-  .row{
-    display:flex;
-    gap:10px;
-    align-items:center;
-    flex-wrap:wrap;
-  }
+    .row{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      flex-wrap:wrap;
+    }
 
-  button{
-    border:none;
-    cursor:pointer;
-    font-weight: 600;
-    letter-spacing: -0.01em;
-    box-shadow: var(--shadow2);
-    transform: translateY(0);
-    transition: transform .08s ease, box-shadow .12s ease, opacity .12s ease;
-  }
-  button:active{ transform: translateY(1px); box-shadow: 0 6px 16px rgba(0,0,0,.06); }
+    button{
+      border:none;
+      cursor:pointer;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      box-shadow: var(--shadow2);
+      transform: translateY(0);
+      transition: transform .08s ease, box-shadow .12s ease, opacity .12s ease;
+      background: linear-gradient(135deg, #ff6fae, #7a8dff);
+      color:#fff;
+    }
+    button:active{ transform: translateY(1px); box-shadow: 0 6px 16px rgba(0,0,0,.06); }
 
-  /* Primary */
-  button{
-    background: linear-gradient(135deg, #ff6fae, #7a8dff);
-    color:#fff;
-  }
+    button.secondary{
+      background: rgba(255,255,255,.88);
+      color:#111;
+      border: 1px solid rgba(0,0,0,.10);
+      box-shadow: 0 10px 20px rgba(0,0,0,.05);
+    }
 
-  /* Secondary */
-  button.secondary{
-    background: rgba(255,255,255,.88);
-    color:#111;
-    border: 1px solid rgba(0,0,0,.10);
-    box-shadow: 0 10px 20px rgba(0,0,0,.05);
-  }
+    button.ghost{
+      background: rgba(255,255,255,.55);
+      color:#111;
+      border: 1px solid rgba(0,0,0,.08);
+      box-shadow: none;
+    }
 
-  /* Ghost */
-  button.ghost{
-    background: rgba(255,255,255,.55);
-    color:#111;
-    border: 1px solid rgba(0,0,0,.08);
-    box-shadow: none;
-  }
+    .pill{
+      display:inline-block;
+      padding: 9px 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.75);
+      border: 1px solid rgba(0,0,0,.07);
+      font-size: 12px;
+      box-shadow: 0 10px 18px rgba(0,0,0,.04);
+    }
 
-  .pill{
-    display:inline-block;
-    padding: 9px 12px;
-    border-radius: 999px;
-    background: rgba(255,255,255,.75);
-    border: 1px solid rgba(0,0,0,.07);
-    font-size: 12px;
-    box-shadow: 0 10px 18px rgba(0,0,0,.04);
-  }
+    .divider{
+      height: 1px;
+      background: rgba(0,0,0,.06);
+      margin: 14px 0;
+    }
 
-  .divider{
-    height: 1px;
-    background: rgba(0,0,0,.06);
-    margin: 14px 0;
-  }
+    .tag{
+      display:inline-flex;
+      gap:8px;
+      align-items:center;
+      padding: 10px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(0,0,0,.08);
+      background: rgba(255,255,255,.70);
+      font-size: 13px;
+      cursor:pointer;
+      user-select:none;
+      box-shadow: 0 10px 18px rgba(0,0,0,.04);
+    }
+    .tag.active{
+      border-color: rgba(122,141,255,.65);
+      box-shadow: 0 0 0 4px rgba(122,141,255,.14), 0 14px 26px rgba(0,0,0,.06);
+    }
 
-  .tag{
-    display:inline-flex;
-    gap:8px;
-    align-items:center;
-    padding: 10px 12px;
-    border-radius: 999px;
-    border: 1px solid rgba(0,0,0,.08);
-    background: rgba(255,255,255,.70);
-    font-size: 13px;
-    cursor:pointer;
-    user-select:none;
-    box-shadow: 0 10px 18px rgba(0,0,0,.04);
-  }
-  .tag.active{
-    border-color: rgba(122,141,255,.65);
-    box-shadow: 0 0 0 4px rgba(122,141,255,.14), 0 14px 26px rgba(0,0,0,.06);
-  }
+    .checklist{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
 
-  .checklist{
-    display:grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-  }
+    .chk{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      padding: 12px 12px;
+      border: 1px solid rgba(0,0,0,.08);
+      border-radius: 16px;
+      background: rgba(255,255,255,.70);
+      box-shadow: 0 10px 18px rgba(0,0,0,.04);
+    }
+    .chk input{ width:auto; transform: scale(1.05); }
 
-  .chk{
-    display:flex;
-    gap:10px;
-    align-items:center;
-    padding: 12px 12px;
-    border: 1px solid rgba(0,0,0,.08);
-    border-radius: 16px;
-    background: rgba(255,255,255,.70);
-    box-shadow: 0 10px 18px rgba(0,0,0,.04);
-  }
-  .chk input{ width:auto; transform: scale(1.05); }
+    .danger{ color:#b00020; }
 
-  .danger{ color:#b00020; }
+    ul{ margin: 8px 0 0 18px; padding:0; }
+    li{ margin: 6px 0; color: #333; }
 
-  ul{ margin: 8px 0 0 18px; padding:0; }
-  li{ margin: 6px 0; color: #333; }
+    .small{
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 12px;
+    }
 
-  .small{
-    font-size: 12px;
-    color: var(--muted);
-    margin-top: 12px;
-  }
+    .footer{
+      margin-top: 14px;
+      text-align:center;
+      color: rgba(0,0,0,.55);
+      font-size: 12px;
+    }
 
-  .footer{
-    margin-top: 14px;
-    text-align:center;
-    color: rgba(0,0,0,.55);
-    font-size: 12px;
-  }
-
-  @media (max-width: 640px){
-    .grid{ grid-template-columns: 1fr; }
-    .checklist{ grid-template-columns: 1fr; }
-  }
-</style>
-
+    @media (max-width: 640px){
+      .grid{ grid-template-columns: 1fr; }
+      .checklist{ grid-template-columns: 1fr; }
+    }
+  </style>
 </head>
 
 <body>
@@ -284,6 +277,18 @@
         <button id="waterResetBtn" class="secondary" style="flex:1;">Reset today</button>
       </div>
 
+      <h2 style="margin-top:16px;">Daily History</h2>
+      <div class="grid">
+        <div>
+          <label>Select date</label>
+          <input id="historyDate" type="date" />
+        </div>
+        <div style="display:flex; align-items:end;">
+          <button id="viewLogBtn" class="secondary">View log</button>
+        </div>
+      </div>
+      <div id="dayLog" class="muted" style="margin-top:10px;"></div>
+
       <h2 style="margin-top:16px;">Prediction</h2>
       <div id="prediction" class="muted"></div>
 
@@ -300,7 +305,7 @@
   </div>
 
 <script>
-  const KEY = "cycle_tracker_pwa_v2";
+  const KEY = "cycle_tracker_pwa_v3";
 
   // --- helpers ---
   function loadState() {
@@ -455,6 +460,8 @@
         saveState(state);
         renderMood(state);
         renderTodaySummary(state);
+        const hd = document.getElementById("historyDate");
+        if (hd && hd.value === t) renderDayLog(state, t);
       });
     });
   }
@@ -520,6 +527,33 @@
     `;
   }
 
+  // Daily history render
+  function renderDayLog(state, isoDate) {
+    const el = document.getElementById("dayLog");
+    if (!el) return;
+
+    const moodId = state.moodByDate?.[isoDate] || "";
+    const moodLabel = MOODS.find(m => m.id === moodId)?.label || "—";
+
+    const symptomIds = state.symptomsByDate?.[isoDate] || [];
+    const symptomLabels = symptomIds.length
+      ? symptomIds.map(id => SYMPTOMS.find(s => s.id === id)?.label).filter(Boolean).join(", ")
+      : "—";
+
+    const water = Number(state.waterByDate?.[isoDate] || 0);
+
+    el.innerHTML = `
+      <div class="row">
+        <span class="pill"><b>${isoDate}</b></span>
+        <span class="pill">Mood: ${moodLabel}</span>
+        <span class="pill">Water: ${water} glasses</span>
+      </div>
+      <div class="row" style="margin-top:8px;">
+        <span class="pill">Symptoms: ${symptomLabels}</span>
+      </div>
+    `;
+  }
+
   function hydrateForm(state) {
     document.getElementById("lastStart").value = state.lastStart || "";
     document.getElementById("cycleLen").value = state.cycleLen ?? 28;
@@ -535,6 +569,22 @@
   renderSymptoms(state);
   renderWater(state);
   renderTodaySummary(state);
+
+  // Init daily history
+  const historyDateInput = document.getElementById("historyDate");
+  if (historyDateInput) {
+    historyDateInput.value = todayKey();
+    renderDayLog(state, historyDateInput.value);
+
+    document.getElementById("viewLogBtn").addEventListener("click", () => {
+      const d = historyDateInput.value || todayKey();
+      renderDayLog(state, d);
+    });
+
+    historyDateInput.addEventListener("change", () => {
+      renderDayLog(state, historyDateInput.value);
+    });
+  }
 
   // Save settings
   document.getElementById("saveBtn").addEventListener("click", () => {
@@ -574,6 +624,10 @@
     renderSymptoms(state);
     renderWater(state);
     renderTodaySummary(state);
+    if (historyDateInput) {
+      historyDateInput.value = todayKey();
+      renderDayLog(state, historyDateInput.value);
+    }
   });
 
   // Mood clear
@@ -583,6 +637,7 @@
     saveState(state);
     renderMood(state);
     renderTodaySummary(state);
+    if (historyDateInput && historyDateInput.value === t) renderDayLog(state, t);
   });
 
   // Symptoms save / clear
@@ -591,6 +646,7 @@
     state.symptomsByDate[t] = getCheckedSymptoms();
     saveState(state);
     renderTodaySummary(state);
+    if (historyDateInput && historyDateInput.value === t) renderDayLog(state, t);
   });
 
   document.getElementById("clearSymptomsBtn").addEventListener("click", () => {
@@ -599,6 +655,7 @@
     saveState(state);
     renderSymptoms(state);
     renderTodaySummary(state);
+    if (historyDateInput && historyDateInput.value === t) renderDayLog(state, t);
   });
 
   // Water + / reset
@@ -609,6 +666,7 @@
     saveState(state);
     renderWater(state);
     renderTodaySummary(state);
+    if (historyDateInput && historyDateInput.value === t) renderDayLog(state, t);
   });
 
   document.getElementById("waterResetBtn").addEventListener("click", () => {
@@ -617,6 +675,7 @@
     saveState(state);
     renderWater(state);
     renderTodaySummary(state);
+    if (historyDateInput && historyDateInput.value === t) renderDayLog(state, t);
   });
 
   // Offline support
