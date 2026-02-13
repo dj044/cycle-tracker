@@ -15,7 +15,7 @@
 
   <style>
     body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; margin:0; background:#fafafa; }
-    .wrap { max-width: 720px; margin: 0 auto; padding: 18px; }
+    .wrap { max-width: 820px; margin: 0 auto; padding: 18px; }
     .card { background:#fff; border:1px solid #eaeaea; border-radius:16px; padding:16px; box-shadow: 0 1px 8px rgba(0,0,0,.04); }
     h1 { font-size:20px; margin:0 0 6px; }
     h2 { font-size:16px; margin:14px 0 8px; }
@@ -23,6 +23,7 @@
     input, button { font-size:15px; padding:12px; border-radius:12px; border:1px solid #ddd; width:100%; }
     button { background:#111; color:#fff; border:none; cursor:pointer; }
     button.secondary { background:#fff; color:#111; border:1px solid #ddd; }
+    button.ghost { background:#f7f7f7; color:#111; border:1px solid #eee; }
     .grid { display:grid; grid-template-columns: 1fr 1fr; gap:12px; }
     .row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
     .pill { display:inline-block; padding:8px 10px; border-radius:999px; background:#f2f2f2; font-size:12px; }
@@ -31,7 +32,17 @@
     li { margin: 6px 0; }
     .danger { color:#b00020; }
     .small { font-size:12px; color:#666; margin-top:12px; }
-    @media (max-width: 640px) { .grid { grid-template-columns:1fr; } }
+    .divider { height:1px; background:#eee; margin: 12px 0; }
+    .tag { display:inline-flex; gap:8px; align-items:center; padding:10px 12px; border-radius:999px; border:1px solid #eaeaea; background:#fff; font-size:13px; cursor:pointer; user-select:none; }
+    .tag.active { border-color:#111; }
+    .checklist { display:grid; grid-template-columns: 1fr 1fr; gap:10px; }
+    .chk { display:flex; gap:10px; align-items:center; padding:10px 12px; border:1px solid #eee; border-radius:14px; background:#fff; }
+    .chk input { width:auto; }
+    .footer { margin-top:14px; text-align:center; color:#777; font-size:12px; }
+    @media (max-width: 640px) {
+      .grid { grid-template-columns:1fr; }
+      .checklist { grid-template-columns:1fr; }
+    }
   </style>
 </head>
 
@@ -60,28 +71,64 @@
         </div>
       </div>
 
-      <h2>Prediction</h2>
+      <h2>Today</h2>
+      <div id="todaySummary" class="muted"></div>
+      <div class="divider"></div>
+
+      <h2>Daily Mood</h2>
+      <div class="row" id="moodRow" aria-label="Mood choices"></div>
+      <div class="row" style="margin-top:10px;">
+        <button id="clearMoodBtn" class="secondary" style="flex:1;">Clear mood</button>
+      </div>
+
+      <h2 style="margin-top:16px;">Symptoms</h2>
+      <div class="checklist" id="symptomList"></div>
+      <div class="row" style="margin-top:10px;">
+        <button id="saveSymptomsBtn" class="ghost" style="flex:1;">Save symptoms</button>
+        <button id="clearSymptomsBtn" class="secondary" style="flex:1;">Clear symptoms</button>
+      </div>
+
+      <h2 style="margin-top:16px;">Water Intake</h2>
+      <div class="row">
+        <span class="pill" id="waterPill">Today: 0 glasses</span>
+      </div>
+      <div class="row" style="margin-top:10px;">
+        <button id="waterPlusBtn" style="flex:1;">+1 Glass</button>
+        <button id="waterResetBtn" class="secondary" style="flex:1;">Reset today</button>
+      </div>
+
+      <h2 style="margin-top:16px;">Prediction</h2>
       <div id="prediction" class="muted"></div>
 
       <h2>History</h2>
       <div class="row">
         <button id="addTodayBtn" class="secondary" style="flex:1;">Add period start (today)</button>
-        <button id="clearBtn" class="secondary" style="flex:1;">Clear all</button>
+        <button id="clearAllBtn" class="secondary" style="flex:1;">Clear all</button>
       </div>
       <div id="history" class="muted"></div>
 
       <div class="small">Ovulation estimate is approx. 14 days before next period (varies person to person).</div>
+      <div class="footer">Made with ❤️ by Daljeet</div>
     </div>
   </div>
 
 <script>
-  const KEY = "cycle_tracker_pwa_v1";
+  const KEY = "cycle_tracker_pwa_v2";
 
+  // --- helpers ---
   function loadState() {
     try {
-      return JSON.parse(localStorage.getItem(KEY)) || { lastStart:"", cycleLen:28, periodLen:5, starts:[] };
+      return JSON.parse(localStorage.getItem(KEY)) || {
+        lastStart: "",
+        cycleLen: 28,
+        periodLen: 5,
+        starts: [],
+        moodByDate: {},
+        symptomsByDate: {},
+        waterByDate: {}
+      };
     } catch {
-      return { lastStart:"", cycleLen:28, periodLen:5, starts:[] };
+      return { lastStart:"", cycleLen:28, periodLen:5, starts:[], moodByDate:{}, symptomsByDate:{}, waterByDate:{} };
     }
   }
   function saveState(s) { localStorage.setItem(KEY, JSON.stringify(s)); }
@@ -97,30 +144,79 @@
   }
   function uniqueSortedDesc(arr) { return [...new Set(arr)].sort((a,b) => b.localeCompare(a)); }
 
-  function computePrediction(state) {
-    const predEl = document.getElementById("prediction");
-    if (!state.lastStart) {
-      predEl.innerHTML = `<div class="danger">Set “Last period start date” to see predictions.</div>`;
-      return;
-    }
+  function daysBetween(a, b) { // b - a in whole days
+    const ms = (new Date(b).setHours(0,0,0,0)) - (new Date(a).setHours(0,0,0,0));
+    return Math.round(ms / 86400000);
+  }
+
+  // --- cycle logic ---
+  function getPhaseInfo(state) {
+    if (!state.lastStart) return null;
+
     const last = new Date(state.lastStart + "T00:00:00");
     const cycleLen = Number(state.cycleLen) || 28;
     const periodLen = Number(state.periodLen) || 5;
 
-    const nextPeriod = addDays(last, cycleLen);
-    const periodEnd = addDays(last, periodLen - 1);
+    const todayISO = toISODate(new Date());
+    const today = new Date(todayISO + "T00:00:00");
 
+    // find the latest cycle start <= today using cycleLen stepping
+    let cycleStart = new Date(last);
+    while (addDays(cycleStart, cycleLen) <= today) {
+      cycleStart = addDays(cycleStart, cycleLen);
+    }
+
+    const nextPeriod = addDays(cycleStart, cycleLen);
     const ovulation = addDays(nextPeriod, -14);
     const fertileStart = addDays(ovulation, -5);
     const fertileEnd = ovulation;
 
+    const dayInCycle = daysBetween(cycleStart, today) + 1; // 1-based
+    const inPeriod = dayInCycle >= 1 && dayInCycle <= periodLen;
+
+    // Simple phase labeling
+    let phase = "Follicular";
+    if (inPeriod) phase = "Period";
+    else if (today >= fertileStart && today <= fertileEnd) phase = "Fertile Window";
+    else if (today > fertileEnd && today < addDays(nextPeriod, -1)) phase = "Luteal";
+
+    // Tips
+    const tips = {
+      "Period": "Rest more, hydrate, warm foods, gentle movement.",
+      "Follicular": "Good time for workouts, planning, and trying new routines.",
+      "Fertile Window": "Energy may feel higher—great for strength/cardio and social plans.",
+      "Luteal": "Prioritize sleep, reduce stress, lighter workouts if needed, magnesium-rich foods."
+    };
+
+    const daysToNext = daysBetween(today, nextPeriod);
+
+    return {
+      cycleStart, nextPeriod, ovulation, fertileStart, fertileEnd,
+      dayInCycle, phase, tip: tips[phase] || "", daysToNext,
+      periodEnd: addDays(cycleStart, periodLen - 1)
+    };
+  }
+
+  function renderPrediction(state) {
+    const predEl = document.getElementById("prediction");
+    const info = getPhaseInfo(state);
+    if (!info) {
+      predEl.innerHTML = `<div class="danger">Set “Last period start date” to see predictions.</div>`;
+      return;
+    }
+
     predEl.innerHTML = `
       <div class="row">
-        <span class="pill">Period: ${fmt(last)} → ${fmt(periodEnd)}</span>
-        <span class="pill">Next period: <b>${fmt(nextPeriod)}</b></span>
-        <span class="pill">Ovulation (est): ${fmt(ovulation)}</span>
-        <span class="pill">Fertile: ${fmt(fertileStart)} → ${fmt(fertileEnd)}</span>
+        <span class="pill">Current phase: <b>${info.phase}</b> (Day ${info.dayInCycle})</span>
+        <span class="pill">Next period in: <b>${info.daysToNext}</b> day(s)</span>
       </div>
+      <div class="row" style="margin-top:8px;">
+        <span class="pill">Period: ${fmt(info.cycleStart)} → ${fmt(info.periodEnd)}</span>
+        <span class="pill">Next period: <b>${fmt(info.nextPeriod)}</b></span>
+        <span class="pill">Ovulation (est): ${fmt(info.ovulation)}</span>
+        <span class="pill">Fertile: ${fmt(info.fertileStart)} → ${fmt(info.fertileEnd)}</span>
+      </div>
+      <div class="muted" style="margin-top:10px;"><b>Tip:</b> ${info.tip}</div>
     `;
   }
 
@@ -134,48 +230,209 @@
     el.innerHTML = `<ul>${starts.map(s => `<li>${fmt(new Date(s + "T00:00:00"))}</li>`).join("")}</ul>`;
   }
 
+  // --- mood / symptoms / water ---
+  const MOODS = [
+    { id:"happy", label:"😊 Happy" },
+    { id:"neutral", label:"😐 Neutral" },
+    { id:"low", label:"😔 Low" },
+    { id:"irritable", label:"😡 Irritable" },
+    { id:"tired", label:"😴 Tired" }
+  ];
+
+  const SYMPTOMS = [
+    { id:"cramps", label:"Cramps" },
+    { id:"headache", label:"Headache" },
+    { id:"bloating", label:"Bloating" },
+    { id:"acne", label:"Acne" },
+    { id:"backpain", label:"Back pain" },
+    { id:"tender", label:"Breast tenderness" },
+    { id:"lowenergy", label:"Low energy" }
+  ];
+
+  function todayKey() { return toISODate(new Date()); }
+
+  function renderMood(state) {
+    const row = document.getElementById("moodRow");
+    const t = todayKey();
+    const selected = state.moodByDate?.[t] || "";
+
+    row.innerHTML = MOODS.map(m => {
+      const active = m.id === selected ? "active" : "";
+      return `<div class="tag ${active}" data-mood="${m.id}">${m.label}</div>`;
+    }).join("");
+
+    row.querySelectorAll("[data-mood]").forEach(el => {
+      el.addEventListener("click", () => {
+        const id = el.getAttribute("data-mood");
+        state.moodByDate[t] = id;
+        saveState(state);
+        renderMood(state);
+        renderTodaySummary(state);
+      });
+    });
+  }
+
+  function renderSymptoms(state) {
+    const box = document.getElementById("symptomList");
+    const t = todayKey();
+    const selected = new Set(state.symptomsByDate?.[t] || []);
+
+    box.innerHTML = SYMPTOMS.map(s => {
+      const checked = selected.has(s.id) ? "checked" : "";
+      return `
+        <label class="chk">
+          <input type="checkbox" data-symptom="${s.id}" ${checked} />
+          <span>${s.label}</span>
+        </label>
+      `;
+    }).join("");
+  }
+
+  function getCheckedSymptoms() {
+    const ids = [];
+    document.querySelectorAll('input[data-symptom]').forEach(i => {
+      if (i.checked) ids.push(i.getAttribute("data-symptom"));
+    });
+    return ids;
+  }
+
+  function renderWater(state) {
+    const t = todayKey();
+    const n = Number(state.waterByDate?.[t] || 0);
+    document.getElementById("waterPill").textContent = `Today: ${n} glasses`;
+  }
+
+  function renderTodaySummary(state) {
+    const el = document.getElementById("todaySummary");
+    const t = todayKey();
+
+    const moodId = state.moodByDate?.[t] || "";
+    const moodLabel = MOODS.find(m => m.id === moodId)?.label || "—";
+
+    const symptomIds = state.symptomsByDate?.[t] || [];
+    const symptomLabels = symptomIds.length
+      ? symptomIds.map(id => SYMPTOMS.find(s => s.id === id)?.label).filter(Boolean).join(", ")
+      : "—";
+
+    const water = Number(state.waterByDate?.[t] || 0);
+
+    const info = getPhaseInfo(state);
+    const phase = info ? `${info.phase} (Day ${info.dayInCycle})` : "—";
+    const countdown = info ? `${info.daysToNext} day(s) to next period` : "—";
+
+    el.innerHTML = `
+      <div class="row">
+        <span class="pill">Phase: <b>${phase}</b></span>
+        <span class="pill">${countdown}</span>
+      </div>
+      <div class="row" style="margin-top:8px;">
+        <span class="pill">Mood: ${moodLabel}</span>
+        <span class="pill">Symptoms: ${symptomLabels}</span>
+        <span class="pill">Water: ${water} glasses</span>
+      </div>
+    `;
+  }
+
   function hydrateForm(state) {
     document.getElementById("lastStart").value = state.lastStart || "";
     document.getElementById("cycleLen").value = state.cycleLen ?? 28;
     document.getElementById("periodLen").value = state.periodLen ?? 5;
   }
 
-  // Init
+  // --- init ---
   let state = loadState();
   hydrateForm(state);
-  computePrediction(state);
+  renderPrediction(state);
   renderHistory(state);
+  renderMood(state);
+  renderSymptoms(state);
+  renderWater(state);
+  renderTodaySummary(state);
 
+  // Save settings
   document.getElementById("saveBtn").addEventListener("click", () => {
     const lastStart = document.getElementById("lastStart").value;
     state.lastStart = lastStart;
     state.cycleLen = Number(document.getElementById("cycleLen").value) || 28;
     state.periodLen = Number(document.getElementById("periodLen").value) || 5;
+
     if (lastStart) state.starts = uniqueSortedDesc([...(state.starts || []), lastStart]);
+
     saveState(state);
-    computePrediction(state);
+    renderPrediction(state);
     renderHistory(state);
+    renderTodaySummary(state);
   });
 
+  // Add period start today
   document.getElementById("addTodayBtn").addEventListener("click", () => {
-    const today = toISODate(new Date());
+    const today = todayKey();
     state.lastStart = today;
     state.starts = uniqueSortedDesc([...(state.starts || []), today]);
     document.getElementById("lastStart").value = today;
     saveState(state);
-    computePrediction(state);
+    renderPrediction(state);
     renderHistory(state);
+    renderTodaySummary(state);
   });
 
-  document.getElementById("clearBtn").addEventListener("click", () => {
+  // Clear all
+  document.getElementById("clearAllBtn").addEventListener("click", () => {
     localStorage.removeItem(KEY);
     state = loadState();
     hydrateForm(state);
-    computePrediction(state);
+    renderPrediction(state);
     renderHistory(state);
+    renderMood(state);
+    renderSymptoms(state);
+    renderWater(state);
+    renderTodaySummary(state);
   });
 
-  // Register service worker for offline
+  // Mood clear
+  document.getElementById("clearMoodBtn").addEventListener("click", () => {
+    const t = todayKey();
+    delete state.moodByDate[t];
+    saveState(state);
+    renderMood(state);
+    renderTodaySummary(state);
+  });
+
+  // Symptoms save / clear
+  document.getElementById("saveSymptomsBtn").addEventListener("click", () => {
+    const t = todayKey();
+    state.symptomsByDate[t] = getCheckedSymptoms();
+    saveState(state);
+    renderTodaySummary(state);
+  });
+
+  document.getElementById("clearSymptomsBtn").addEventListener("click", () => {
+    const t = todayKey();
+    state.symptomsByDate[t] = [];
+    saveState(state);
+    renderSymptoms(state);
+    renderTodaySummary(state);
+  });
+
+  // Water + / reset
+  document.getElementById("waterPlusBtn").addEventListener("click", () => {
+    const t = todayKey();
+    const n = Number(state.waterByDate?.[t] || 0) + 1;
+    state.waterByDate[t] = n;
+    saveState(state);
+    renderWater(state);
+    renderTodaySummary(state);
+  });
+
+  document.getElementById("waterResetBtn").addEventListener("click", () => {
+    const t = todayKey();
+    state.waterByDate[t] = 0;
+    saveState(state);
+    renderWater(state);
+    renderTodaySummary(state);
+  });
+
+  // Offline support
   if ("serviceWorker" in navigator) {
     navigator.serviceWorker.register("./sw.js").catch(() => {});
   }
