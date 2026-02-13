@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>Cycle Tracker</title>
+
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="theme-color" content="#ffffff" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Cycle Tracker">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; margin:0; background:#fafafa; }
+    .wrap { max-width: 720px; margin: 0 auto; padding: 18px; }
+    .card { background:#fff; border:1px solid #eaeaea; border-radius:16px; padding:16px; box-shadow: 0 1px 8px rgba(0,0,0,.04); }
+    h1 { font-size:20px; margin:0 0 6px; }
+    h2 { font-size:16px; margin:14px 0 8px; }
+    label { display:block; font-size:13px; margin:10px 0 6px; color:#333; }
+    input, button { font-size:15px; padding:12px; border-radius:12px; border:1px solid #ddd; width:100%; }
+    button { background:#111; color:#fff; border:none; cursor:pointer; }
+    button.secondary { background:#fff; color:#111; border:1px solid #ddd; }
+    .grid { display:grid; grid-template-columns: 1fr 1fr; gap:12px; }
+    .row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+    .pill { display:inline-block; padding:8px 10px; border-radius:999px; background:#f2f2f2; font-size:12px; }
+    .muted { color:#666; font-size:13px; line-height:1.4; }
+    ul { margin: 8px 0 0 18px; padding:0; }
+    li { margin: 6px 0; }
+    .danger { color:#b00020; }
+    .small { font-size:12px; color:#666; margin-top:12px; }
+    @media (max-width: 640px) { .grid { grid-template-columns:1fr; } }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>Cycle Tracker</h1>
+      <div class="muted">Private: data stays on this phone (offline). Not medical advice.</div>
+
+      <h2>Settings</h2>
+      <div class="grid">
+        <div>
+          <label>Last period start date</label>
+          <input id="lastStart" type="date" />
+        </div>
+        <div>
+          <label>Average cycle length (days)</label>
+          <input id="cycleLen" type="number" min="15" max="60" />
+        </div>
+        <div>
+          <label>Period length (days)</label>
+          <input id="periodLen" type="number" min="1" max="14" />
+        </div>
+        <div style="display:flex; align-items:end;">
+          <button id="saveBtn">Save</button>
+        </div>
+      </div>
+
+      <h2>Prediction</h2>
+      <div id="prediction" class="muted"></div>
+
+      <h2>History</h2>
+      <div class="row">
+        <button id="addTodayBtn" class="secondary" style="flex:1;">Add period start (today)</button>
+        <button id="clearBtn" class="secondary" style="flex:1;">Clear all</button>
+      </div>
+      <div id="history" class="muted"></div>
+
+      <div class="small">Ovulation estimate is approx. 14 days before next period (varies person to person).</div>
+    </div>
+  </div>
+
+<script>
+  const KEY = "cycle_tracker_pwa_v1";
+
+  function loadState() {
+    try {
+      return JSON.parse(localStorage.getItem(KEY)) || { lastStart:"", cycleLen:28, periodLen:5, starts:[] };
+    } catch {
+      return { lastStart:"", cycleLen:28, periodLen:5, starts:[] };
+    }
+  }
+  function saveState(s) { localStorage.setItem(KEY, JSON.stringify(s)); }
+
+  function addDays(date, days) { const d = new Date(date); d.setDate(d.getDate() + days); return d; }
+  function fmt(d) { return d.toLocaleDateString(undefined, { year:"numeric", month:"short", day:"numeric" }); }
+  function toISODate(d) {
+    const x = new Date(d);
+    const yyyy = x.getFullYear();
+    const mm = String(x.getMonth()+1).padStart(2,"0");
+    const dd = String(x.getDate()).padStart(2,"0");
+    return `${yyyy}-${mm}-${dd}`;
+  }
+  function uniqueSortedDesc(arr) { return [...new Set(arr)].sort((a,b) => b.localeCompare(a)); }
+
+  function computePrediction(state) {
+    const predEl = document.getElementById("prediction");
+    if (!state.lastStart) {
+      predEl.innerHTML = `<div class="danger">Set “Last period start date” to see predictions.</div>`;
+      return;
+    }
+    const last = new Date(state.lastStart + "T00:00:00");
+    const cycleLen = Number(state.cycleLen) || 28;
+    const periodLen = Number(state.periodLen) || 5;
+
+    const nextPeriod = addDays(last, cycleLen);
+    const periodEnd = addDays(last, periodLen - 1);
+
+    const ovulation = addDays(nextPeriod, -14);
+    const fertileStart = addDays(ovulation, -5);
+    const fertileEnd = ovulation;
+
+    predEl.innerHTML = `
+      <div class="row">
+        <span class="pill">Period: ${fmt(last)} → ${fmt(periodEnd)}</span>
+        <span class="pill">Next period: <b>${fmt(nextPeriod)}</b></span>
+        <span class="pill">Ovulation (est): ${fmt(ovulation)}</span>
+        <span class="pill">Fertile: ${fmt(fertileStart)} → ${fmt(fertileEnd)}</span>
+      </div>
+    `;
+  }
+
+  function renderHistory(state) {
+    const el = document.getElementById("history");
+    const starts = uniqueSortedDesc(state.starts || []);
+    if (!starts.length) {
+      el.innerHTML = `<div class="muted">No history yet. Tap “Add period start (today)” or save a date above.</div>`;
+      return;
+    }
+    el.innerHTML = `<ul>${starts.map(s => `<li>${fmt(new Date(s + "T00:00:00"))}</li>`).join("")}</ul>`;
+  }
+
+  function hydrateForm(state) {
+    document.getElementById("lastStart").value = state.lastStart || "";
+    document.getElementById("cycleLen").value = state.cycleLen ?? 28;
+    document.getElementById("periodLen").value = state.periodLen ?? 5;
+  }
+
+  // Init
+  let state = loadState();
+  hydrateForm(state);
+  computePrediction(state);
+  renderHistory(state);
+
+  document.getElementById("saveBtn").addEventListener("click", () => {
+    const lastStart = document.getElementById("lastStart").value;
+    state.lastStart = lastStart;
+    state.cycleLen = Number(document.getElementById("cycleLen").value) || 28;
+    state.periodLen = Number(document.getElementById("periodLen").value) || 5;
+    if (lastStart) state.starts = uniqueSortedDesc([...(state.starts || []), lastStart]);
+    saveState(state);
+    computePrediction(state);
+    renderHistory(state);
+  });
+
+  document.getElementById("addTodayBtn").addEventListener("click", () => {
+    const today = toISODate(new Date());
+    state.lastStart = today;
+    state.starts = uniqueSortedDesc([...(state.starts || []), today]);
+    document.getElementById("lastStart").value = today;
+    saveState(state);
+    computePrediction(state);
+    renderHistory(state);
+  });
+
+  document.getElementById("clearBtn").addEventListener("click", () => {
+    localStorage.removeItem(KEY);
+    state = loadState();
+    hydrateForm(state);
+    computePrediction(state);
+    renderHistory(state);
+  });
+
+  // Register service worker for offline
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("./sw.js").catch(() => {});
+  }
+</script>
+</body>
+</html>
