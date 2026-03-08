@@ -1,687 +1,211 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>Cycle Tracker</title>
-
-  <!-- PWA -->
-  <link rel="manifest" href="manifest.webmanifest">
-  <meta name="theme-color" content="#ffffff" />
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="apple-mobile-web-app-title" content="Cycle Tracker">
-  <link rel="apple-touch-icon" href="icons/icon-192.png">
-
-  <style>
-    :root{
-      --bg1:#fff7fb;
-      --bg2:#f4f7ff;
-      --card: rgba(255,255,255,.78);
-      --stroke: rgba(20,20,20,.08);
-      --text:#111;
-      --muted:#5a5a5a;
-      --shadow: 0 18px 50px rgba(0,0,0,.08);
-      --shadow2: 0 8px 22px rgba(0,0,0,.06);
-      --radius: 22px;
-    }
-
-    *{ box-sizing:border-box; }
-    body{
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
-      margin:0;
-      color:var(--text);
-      background:
-        radial-gradient(1200px 800px at 15% 10%, var(--bg1), transparent 55%),
-        radial-gradient(1200px 800px at 90% 25%, var(--bg2), transparent 55%),
-        linear-gradient(#fbfbfb, #f7f7f7);
-      min-height:100vh;
-    }
-
-    .wrap{
-      max-width: 860px;
-      margin:0 auto;
-      padding: 22px 16px 28px;
-    }
-
-    .card{
-      background: var(--card);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border: 1px solid var(--stroke);
-      border-radius: var(--radius);
-      padding: 18px;
-      box-shadow: var(--shadow);
-    }
-
-    h1{
-      font-size: 22px;
-      letter-spacing: -0.02em;
-      margin: 0 0 6px;
-    }
-
-    .muted{
-      color: var(--muted);
-      font-size: 13px;
-      line-height: 1.4;
-    }
-
-    h2{
-      font-size: 14px;
-      letter-spacing: 0.02em;
-      text-transform: uppercase;
-      color: #333;
-      margin: 18px 0 10px;
-      display:flex;
-      align-items:center;
-      gap:8px;
-    }
-
-    h2:before{
-      content:"";
-      width:10px;
-      height:10px;
-      border-radius:50%;
-      background: linear-gradient(135deg, #ff6fae, #7a8dff);
-      box-shadow: 0 6px 16px rgba(255,111,174,.25);
-      display:inline-block;
-    }
-
-    label{
-      display:block;
-      font-size: 12.5px;
-      margin: 10px 0 6px;
-      color:#333;
-    }
-
-    input, button{
-      width:100%;
-      font-size: 15px;
-      padding: 12px 12px;
-      border-radius: 14px;
-      border: 1px solid rgba(0,0,0,.12);
-      background: rgba(255,255,255,.92);
-      outline:none;
-    }
-
-    input:focus{
-      border-color: rgba(122,141,255,.65);
-      box-shadow: 0 0 0 4px rgba(122,141,255,.14);
-    }
-
-    .grid{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-    }
-
-    .row{
-      display:flex;
-      gap:10px;
-      align-items:center;
-      flex-wrap:wrap;
-    }
-
-    button{
-      border:none;
-      cursor:pointer;
-      font-weight: 600;
-      letter-spacing: -0.01em;
-      box-shadow: var(--shadow2);
-      transform: translateY(0);
-      transition: transform .08s ease, box-shadow .12s ease, opacity .12s ease;
-      background: linear-gradient(135deg, #ff6fae, #7a8dff);
-      color:#fff;
-    }
-    button:active{ transform: translateY(1px); box-shadow: 0 6px 16px rgba(0,0,0,.06); }
-
-    button.secondary{
-      background: rgba(255,255,255,.88);
-      color:#111;
-      border: 1px solid rgba(0,0,0,.10);
-      box-shadow: 0 10px 20px rgba(0,0,0,.05);
-    }
-
-    button.ghost{
-      background: rgba(255,255,255,.55);
-      color:#111;
-      border: 1px solid rgba(0,0,0,.08);
-      box-shadow: none;
-    }
-
-    .pill{
-      display:inline-block;
-      padding: 9px 12px;
-      border-radius: 999px;
-      background: rgba(255,255,255,.75);
-      border: 1px solid rgba(0,0,0,.07);
-      font-size: 12px;
-      box-shadow: 0 10px 18px rgba(0,0,0,.04);
-    }
-
-    .divider{
-      height: 1px;
-      background: rgba(0,0,0,.06);
-      margin: 14px 0;
-    }
-
-    .tag{
-      display:inline-flex;
-      gap:8px;
-      align-items:center;
-      padding: 10px 12px;
-      border-radius: 999px;
-      border: 1px solid rgba(0,0,0,.08);
-      background: rgba(255,255,255,.70);
-      font-size: 13px;
-      cursor:pointer;
-      user-select:none;
-      box-shadow: 0 10px 18px rgba(0,0,0,.04);
-    }
-    .tag.active{
-      border-color: rgba(122,141,255,.65);
-      box-shadow: 0 0 0 4px rgba(122,141,255,.14), 0 14px 26px rgba(0,0,0,.06);
-    }
-
-    .checklist{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-    }
-
-    .chk{
-      display:flex;
-      gap:10px;
-      align-items:center;
-      padding: 12px 12px;
-      border: 1px solid rgba(0,0,0,.08);
-      border-radius: 16px;
-      background: rgba(255,255,255,.70);
-      box-shadow: 0 10px 18px rgba(0,0,0,.04);
-    }
-    .chk input{ width:auto; transform: scale(1.05); }
-
-    .danger{ color:#b00020; }
-
-    ul{ margin: 8px 0 0 18px; padding:0; }
-    li{ margin: 6px 0; color: #333; }
-
-    .small{
-      font-size: 12px;
-      color: var(--muted);
-      margin-top: 12px;
-    }
-
-    .footer{
-      margin-top: 14px;
-      text-align:center;
-      color: rgba(0,0,0,.55);
-      font-size: 12px;
-    }
-
-    @media (max-width: 640px){
-      .grid{ grid-template-columns: 1fr; }
-      .checklist{ grid-template-columns: 1fr; }
-    }
-  </style>
-</head>
-
-<body>
-  <div class="wrap">
-    <div class="card">
-      <h1>Cycle Tracker</h1>
-      <div class="muted">Private: data stays on this phone (offline). Not medical advice.</div>
-
-      <h2>Settings</h2>
-      <div class="grid">
-        <div>
-          <label>Last period start date</label>
-          <input id="lastStart" type="date" />
-        </div>
-        <div>
-          <label>Average cycle length (days)</label>
-          <input id="cycleLen" type="number" min="15" max="60" />
-        </div>
-        <div>
-          <label>Period length (days)</label>
-          <input id="periodLen" type="number" min="1" max="14" />
-        </div>
-        <div style="display:flex; align-items:end;">
-          <button id="saveBtn">Save</button>
-        </div>
-      </div>
-
-      <h2>Today</h2>
-      <div id="todaySummary" class="muted"></div>
-      <div class="divider"></div>
-
-      <h2>Daily Mood</h2>
-      <div class="row" id="moodRow" aria-label="Mood choices"></div>
-      <div class="row" style="margin-top:10px;">
-        <button id="clearMoodBtn" class="secondary" style="flex:1;">Clear mood</button>
-      </div>
-
-      <h2 style="margin-top:16px;">Symptoms</h2>
-      <div class="checklist" id="symptomList"></div>
-      <div class="row" style="margin-top:10px;">
-        <button id="saveSymptomsBtn" class="ghost" style="flex:1;">Save symptoms</button>
-        <button id="clearSymptomsBtn" class="secondary" style="flex:1;">Clear symptoms</button>
-      </div>
-
-      <h2 style="margin-top:16px;">Water Intake</h2>
-      <div class="row">
-        <span class="pill" id="waterPill">Today: 0 glasses</span>
-      </div>
-      <div class="row" style="margin-top:10px;">
-        <button id="waterPlusBtn" style="flex:1;">+1 Glass</button>
-        <button id="waterResetBtn" class="secondary" style="flex:1;">Reset today</button>
-      </div>
-
-      <h2 style="margin-top:16px;">Daily History</h2>
-      <div class="grid">
-        <div>
-          <label>Select date</label>
-          <input id="historyDate" type="date" />
-        </div>
-        <div style="display:flex; align-items:end;">
-          <button id="viewLogBtn" class="secondary">View log</button>
-        </div>
-      </div>
-      <div id="dayLog" class="muted" style="margin-top:10px;"></div>
-
-      <h2 style="margin-top:16px;">Prediction</h2>
-      <div id="prediction" class="muted"></div>
-
-      <h2>History</h2>
-      <div class="row">
-        <button id="addTodayBtn" class="secondary" style="flex:1;">Add period start (today)</button>
-        <button id="clearAllBtn" class="secondary" style="flex:1;">Clear all</button>
-      </div>
-      <div id="history" class="muted"></div>
-
-      <div class="small">Ovulation estimate is approx. 14 days before next period (varies person to person).</div>
-      <div class="footer">Made with ❤️ by Daljeet</div>
-    </div>
-  </div>
-
-<script>
-  const KEY = "cycle_tracker_pwa_v3";
-
-  // --- helpers ---
-  function loadState() {
-    try {
-      return JSON.parse(localStorage.getItem(KEY)) || {
-        lastStart: "",
-        cycleLen: 28,
-        periodLen: 5,
-        starts: [],
-        moodByDate: {},
-        symptomsByDate: {},
-        waterByDate: {}
-      };
-    } catch {
-      return { lastStart:"", cycleLen:28, periodLen:5, starts:[], moodByDate:{}, symptomsByDate:{}, waterByDate:{} };
-    }
-  }
-  function saveState(s) { localStorage.setItem(KEY, JSON.stringify(s)); }
-
-  function addDays(date, days) { const d = new Date(date); d.setDate(d.getDate() + days); return d; }
-  function fmt(d) { return d.toLocaleDateString(undefined, { year:"numeric", month:"short", day:"numeric" }); }
-  function toISODate(d) {
-    const x = new Date(d);
-    const yyyy = x.getFullYear();
-    const mm = String(x.getMonth()+1).padStart(2,"0");
-    const dd = String(x.getDate()).padStart(2,"0");
-    return `${yyyy}-${mm}-${dd}`;
-  }
-  function uniqueSortedDesc(arr) { return [...new Set(arr)].sort((a,b) => b.localeCompare(a)); }
-
-  function daysBetween(a, b) { // b - a in whole days
-    const ms = (new Date(b).setHours(0,0,0,0)) - (new Date(a).setHours(0,0,0,0));
-    return Math.round(ms / 86400000);
-  }
-
-  // --- cycle logic ---
-  function getPhaseInfo(state) {
-    if (!state.lastStart) return null;
-
-    const last = new Date(state.lastStart + "T00:00:00");
-    const cycleLen = Number(state.cycleLen) || 28;
-    const periodLen = Number(state.periodLen) || 5;
-
-    const todayISO = toISODate(new Date());
-    const today = new Date(todayISO + "T00:00:00");
-
-    // find the latest cycle start <= today using cycleLen stepping
-    let cycleStart = new Date(last);
-    while (addDays(cycleStart, cycleLen) <= today) {
-      cycleStart = addDays(cycleStart, cycleLen);
-    }
-
-    const nextPeriod = addDays(cycleStart, cycleLen);
-    const ovulation = addDays(nextPeriod, -14);
-    const fertileStart = addDays(ovulation, -5);
-    const fertileEnd = ovulation;
-
-    const dayInCycle = daysBetween(cycleStart, today) + 1; // 1-based
-    const inPeriod = dayInCycle >= 1 && dayInCycle <= periodLen;
-
-    // Simple phase labeling
-    let phase = "Follicular";
-    if (inPeriod) phase = "Period";
-    else if (today >= fertileStart && today <= fertileEnd) phase = "Fertile Window";
-    else if (today > fertileEnd && today < addDays(nextPeriod, -1)) phase = "Luteal";
-
-    // Tips
-    const tips = {
-      "Period": "Rest more, hydrate, warm foods, gentle movement.",
-      "Follicular": "Good time for workouts, planning, and trying new routines.",
-      "Fertile Window": "Energy may feel higher—great for strength/cardio and social plans.",
-      "Luteal": "Prioritize sleep, reduce stress, lighter workouts if needed, magnesium-rich foods."
-    };
-
-    const daysToNext = daysBetween(today, nextPeriod);
-
-    return {
-      cycleStart, nextPeriod, ovulation, fertileStart, fertileEnd,
-      dayInCycle, phase, tip: tips[phase] || "", daysToNext,
-      periodEnd: addDays(cycleStart, periodLen - 1)
-    };
-  }
-
-  function renderPrediction(state) {
-    const predEl = document.getElementById("prediction");
-    const info = getPhaseInfo(state);
-    if (!info) {
-      predEl.innerHTML = `<div class="danger">Set “Last period start date” to see predictions.</div>`;
-      return;
-    }
-
-    predEl.innerHTML = `
-      <div class="row">
-        <span class="pill">Current phase: <b>${info.phase}</b> (Day ${info.dayInCycle})</span>
-        <span class="pill">Next period in: <b>${info.daysToNext}</b> day(s)</span>
-      </div>
-      <div class="row" style="margin-top:8px;">
-        <span class="pill">Period: ${fmt(info.cycleStart)} → ${fmt(info.periodEnd)}</span>
-        <span class="pill">Next period: <b>${fmt(info.nextPeriod)}</b></span>
-        <span class="pill">Ovulation (est): ${fmt(info.ovulation)}</span>
-        <span class="pill">Fertile: ${fmt(info.fertileStart)} → ${fmt(info.fertileEnd)}</span>
-      </div>
-      <div class="muted" style="margin-top:10px;"><b>Tip:</b> ${info.tip}</div>
-    `;
-  }
-
-  function renderHistory(state) {
-    const el = document.getElementById("history");
-    const starts = uniqueSortedDesc(state.starts || []);
-    if (!starts.length) {
-      el.innerHTML = `<div class="muted">No history yet. Tap “Add period start (today)” or save a date above.</div>`;
-      return;
-    }
-    el.innerHTML = `<ul>${starts.map(s => `<li>${fmt(new Date(s + "T00:00:00"))}</li>`).join("")}</ul>`;
-  }
-
-  // --- mood / symptoms / water ---
-  const MOODS = [
-    { id:"happy", label:"😊 Happy" },
-    { id:"neutral", label:"😐 Neutral" },
-    { id:"low", label:"😔 Low" },
-    { id:"irritable", label:"😡 Irritable" },
-    { id:"tired", label:"😴 Tired" }
-  ];
-
-  const SYMPTOMS = [
-    { id:"cramps", label:"Cramps" },
-    { id:"headache", label:"Headache" },
-    { id:"bloating", label:"Bloating" },
-    { id:"acne", label:"Acne" },
-    { id:"backpain", label:"Back pain" },
-    { id:"tender", label:"Breast tenderness" },
-    { id:"lowenergy", label:"Low energy" }
-  ];
-
-  function todayKey() { return toISODate(new Date()); }
-
-  function renderMood(state) {
-    const row = document.getElementById("moodRow");
-    const t = todayKey();
-    const selected = state.moodByDate?.[t] || "";
-
-    row.innerHTML = MOODS.map(m => {
-      const active = m.id === selected ? "active" : "";
-      return `<div class="tag ${active}" data-mood="${m.id}">${m.label}</div>`;
-    }).join("");
-
-    row.querySelectorAll("[data-mood]").forEach(el => {
-      el.addEventListener("click", () => {
-        const id = el.getAttribute("data-mood");
-        state.moodByDate[t] = id;
-        saveState(state);
-        renderMood(state);
-        renderTodaySummary(state);
-        const hd = document.getElementById("historyDate");
-        if (hd && hd.value === t) renderDayLog(state, t);
-      });
-    });
-  }
-
-  function renderSymptoms(state) {
-    const box = document.getElementById("symptomList");
-    const t = todayKey();
-    const selected = new Set(state.symptomsByDate?.[t] || []);
-
-    box.innerHTML = SYMPTOMS.map(s => {
-      const checked = selected.has(s.id) ? "checked" : "";
-      return `
-        <label class="chk">
-          <input type="checkbox" data-symptom="${s.id}" ${checked} />
-          <span>${s.label}</span>
-        </label>
-      `;
-    }).join("");
-  }
-
-  function getCheckedSymptoms() {
-    const ids = [];
-    document.querySelectorAll('input[data-symptom]').forEach(i => {
-      if (i.checked) ids.push(i.getAttribute("data-symptom"));
-    });
-    return ids;
-  }
-
-  function renderWater(state) {
-    const t = todayKey();
-    const n = Number(state.waterByDate?.[t] || 0);
-    document.getElementById("waterPill").textContent = `Today: ${n} glasses`;
-  }
-
-  function renderTodaySummary(state) {
-    const el = document.getElementById("todaySummary");
-    const t = todayKey();
-
-    const moodId = state.moodByDate?.[t] || "";
-    const moodLabel = MOODS.find(m => m.id === moodId)?.label || "—";
-
-    const symptomIds = state.symptomsByDate?.[t] || [];
-    const symptomLabels = symptomIds.length
-      ? symptomIds.map(id => SYMPTOMS.find(s => s.id === id)?.label).filter(Boolean).join(", ")
-      : "—";
-
-    const water = Number(state.waterByDate?.[t] || 0);
-
-    const info = getPhaseInfo(state);
-    const phase = info ? `${info.phase} (Day ${info.dayInCycle})` : "—";
-    const countdown = info ? `${info.daysToNext} day(s) to next period` : "—";
-
-    el.innerHTML = `
-      <div class="row">
-        <span class="pill">Phase: <b>${phase}</b></span>
-        <span class="pill">${countdown}</span>
-      </div>
-      <div class="row" style="margin-top:8px;">
-        <span class="pill">Mood: ${moodLabel}</span>
-        <span class="pill">Symptoms: ${symptomLabels}</span>
-        <span class="pill">Water: ${water} glasses</span>
-      </div>
-    `;
-  }
-
-  // Daily history render
-  function renderDayLog(state, isoDate) {
-    const el = document.getElementById("dayLog");
-    if (!el) return;
-
-    const moodId = state.moodByDate?.[isoDate] || "";
-    const moodLabel = MOODS.find(m => m.id === moodId)?.label || "—";
-
-    const symptomIds = state.symptomsByDate?.[isoDate] || [];
-    const symptomLabels = symptomIds.length
-      ? symptomIds.map(id => SYMPTOMS.find(s => s.id === id)?.label).filter(Boolean).join(", ")
-      : "—";
-
-    const water = Number(state.waterByDate?.[isoDate] || 0);
-
-    el.innerHTML = `
-      <div class="row">
-        <span class="pill"><b>${isoDate}</b></span>
-        <span class="pill">Mood: ${moodLabel}</span>
-        <span class="pill">Water: ${water} glasses</span>
-      </div>
-      <div class="row" style="margin-top:8px;">
-        <span class="pill">Symptoms: ${symptomLabels}</span>
-      </div>
-    `;
-  }
-
-  function hydrateForm(state) {
-    document.getElementById("lastStart").value = state.lastStart || "";
-    document.getElementById("cycleLen").value = state.cycleLen ?? 28;
-    document.getElementById("periodLen").value = state.periodLen ?? 5;
-  }
-
-  // --- init ---
-  let state = loadState();
-  hydrateForm(state);
-  renderPrediction(state);
-  renderHistory(state);
-  renderMood(state);
-  renderSymptoms(state);
-  renderWater(state);
-  renderTodaySummary(state);
-
-  // Init daily history
-  const historyDateInput = document.getElementById("historyDate");
-  if (historyDateInput) {
-    historyDateInput.value = todayKey();
-    renderDayLog(state, historyDateInput.value);
-
-    document.getElementById("viewLogBtn").addEventListener("click", () => {
-      const d = historyDateInput.value || todayKey();
-      renderDayLog(state, d);
-    });
-
-    historyDateInput.addEventListener("change", () => {
-      renderDayLog(state, historyDateInput.value);
-    });
-  }
-
-  // Save settings
-  document.getElementById("saveBtn").addEventListener("click", () => {
-    const lastStart = document.getElementById("lastStart").value;
-    state.lastStart = lastStart;
-    state.cycleLen = Number(document.getElementById("cycleLen").value) || 28;
-    state.periodLen = Number(document.getElementById("periodLen").value) || 5;
-
-    if (lastStart) state.starts = uniqueSortedDesc([...(state.starts || []), lastStart]);
-
-    saveState(state);
-    renderPrediction(state);
-    renderHistory(state);
-    renderTodaySummary(state);
-  });
-
-  // Add period start today
-  document.getElementById("addTodayBtn").addEventListener("click", () => {
-    const today = todayKey();
-    state.lastStart = today;
-    state.starts = uniqueSortedDesc([...(state.starts || []), today]);
-    document.getElementById("lastStart").value = today;
-    saveState(state);
-    renderPrediction(state);
-    renderHistory(state);
-    renderTodaySummary(state);
-  });
-
-  // Clear all
-  document.getElementById("clearAllBtn").addEventListener("click", () => {
-    localStorage.removeItem(KEY);
-    state = loadState();
-    hydrateForm(state);
-    renderPrediction(state);
-    renderHistory(state);
-    renderMood(state);
-    renderSymptoms(state);
-    renderWater(state);
-    renderTodaySummary(state);
-    if (historyDateInput) {
-      historyDateInput.value = todayKey();
-      renderDayLog(state, historyDateInput.value);
-    }
-  });
-
-  // Mood clear
-  document.getElementById("clearMoodBtn").addEventListener("click", () => {
-    const t = todayKey();
-    delete state.moodByDate[t];
-    saveState(state);
-    renderMood(state);
-    renderTodaySummary(state);
-    if (historyDateInput && historyDateInput.value === t) renderDayLog(state, t);
-  });
-
-  // Symptoms save / clear
-  document.getElementById("saveSymptomsBtn").addEventListener("click", () => {
-    const t = todayKey();
-    state.symptomsByDate[t] = getCheckedSymptoms();
-    saveState(state);
-    renderTodaySummary(state);
-    if (historyDateInput && historyDateInput.value === t) renderDayLog(state, t);
-  });
-
-  document.getElementById("clearSymptomsBtn").addEventListener("click", () => {
-    const t = todayKey();
-    state.symptomsByDate[t] = [];
-    saveState(state);
-    renderSymptoms(state);
-    renderTodaySummary(state);
-    if (historyDateInput && historyDateInput.value === t) renderDayLog(state, t);
-  });
-
-  // Water + / reset
-  document.getElementById("waterPlusBtn").addEventListener("click", () => {
-    const t = todayKey();
-    const n = Number(state.waterByDate?.[t] || 0) + 1;
-    state.waterByDate[t] = n;
-    saveState(state);
-    renderWater(state);
-    renderTodaySummary(state);
-    if (historyDateInput && historyDateInput.value === t) renderDayLog(state, t);
-  });
-
-  document.getElementById("waterResetBtn").addEventListener("click", () => {
-    const t = todayKey();
-    state.waterByDate[t] = 0;
-    saveState(state);
-    renderWater(state);
-    renderTodaySummary(state);
-    if (historyDateInput && historyDateInput.value === t) renderDayLog(state, t);
-  });
-
-  // Offline support
-  if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("./sw.js").catch(() => {});
-  }
-</script>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Happy Women's Day Jasleen</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+      body {
+        margin: 0;
+        font-family: Georgia, "Times New Roman", serif;
+        background: linear-gradient(180deg, #fff9f5 0%, #f6ede5 45%, #ecdcc8 100%);
+      }
+
+      .royal-glow {
+        box-shadow: 0 20px 60px rgba(109, 65, 87, 0.18);
+      }
+
+      .gold-border {
+        border: 1px solid rgba(201, 164, 107, 0.55);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+      function App() {
+        const tributeCards = [
+          {
+            icon: "💻",
+            title: "Techie Grace",
+            text: "You make intelligence look elegant — sharp mind, warm heart, and a calm royal aura.",
+          },
+          {
+            icon: "👑",
+            title: "Royal Energy",
+            text: "You carry yourself like a queen — poised, powerful, beautiful, and unforgettable.",
+          },
+          {
+            icon: "🐎",
+            title: "Bridgerton Dream",
+            text: "Like a story from an old palace garden, full of horse rides, charm, and timeless romance.",
+          },
+        ];
+
+        const reasons = [
+          "You blend brilliance and beauty so naturally.",
+          "You feel modern, classy, and deeply special.",
+          "You bring peace, sparkle, and strength together.",
+          "You deserve a love story that feels royal every day.",
+        ];
+
+        return (
+          <div className="min-h-screen text-[#4b2e2a] overflow-hidden relative">
+            <div className="absolute inset-0 pointer-events-none overflow-hidden">
+              <div className="absolute top-0 left-0 w-72 h-72 rounded-full bg-[#d9b26f]/20 blur-3xl"></div>
+              <div className="absolute top-20 right-0 w-96 h-96 rounded-full bg-[#8b5e7a]/20 blur-3xl"></div>
+              <div className="absolute bottom-0 left-1/3 w-80 h-80 rounded-full bg-[#c89f65]/20 blur-3xl"></div>
+            </div>
+
+            <main className="relative max-w-6xl mx-auto px-6 py-10 md:py-16">
+              <section className="grid lg:grid-cols-2 gap-8 items-center">
+                <div className="space-y-6">
+                  <div className="inline-flex items-center gap-2 rounded-full gold-border bg-white/60 px-4 py-2 backdrop-blur royal-glow">
+                    <span>🌷</span>
+                    <span className="text-sm tracking-[0.22em] uppercase" style={{ fontFamily: 'Arial, sans-serif' }}>
+                      Happy Women's Day
+                    </span>
+                  </div>
+
+                  <div className="space-y-4">
+                    <p className="text-sm md:text-base tracking-[0.30em] uppercase text-[#8b5e7a]" style={{ fontFamily: 'Arial, sans-serif' }}>
+                      For Jasleen Kaur
+                    </p>
+                    <h1 className="text-5xl md:text-7xl leading-tight">
+                      To My <span className="italic text-[#8b5e7a]">Royal</span> Tech Queen
+                    </h1>
+                    <p className="text-lg md:text-xl text-[#6c4c46] max-w-xl leading-relaxed" style={{ fontFamily: 'Arial, sans-serif' }}>
+                      A little digital palace for the woman who blends brilliance, grace, and modern magic — with a Bridgerton heart.
+                    </p>
+                  </div>
+
+                  <div className="flex flex-wrap gap-3">
+                    <a
+                      href="#tribute"
+                      className="rounded-2xl bg-[#6d4157] px-5 py-3 text-white transition-transform hover:scale-105 royal-glow no-underline"
+                      style={{ fontFamily: 'Arial, sans-serif' }}
+                    >
+                      Enter the Palace
+                    </a>
+                    <a
+                      href="#ride"
+                      className="rounded-2xl gold-border bg-white/70 px-5 py-3 transition-transform hover:scale-105 no-underline text-[#4b2e2a]"
+                      style={{ fontFamily: 'Arial, sans-serif' }}
+                    >
+                      Horse Ride Dream
+                    </a>
+                  </div>
+                </div>
+
+                <div className="relative">
+                  <div className="rounded-[2rem] gold-border bg-white/55 p-4 royal-glow backdrop-blur-xl">
+                    <div className="rounded-[1.5rem] bg-gradient-to-br from-[#5b3247] via-[#7b4b61] to-[#c39a5b] p-[1px]">
+                      <div className="rounded-[1.45rem] bg-[#fff8f2] p-8 min-h-[520px] flex flex-col justify-between">
+                        <div>
+                          <div className="flex items-center justify-between text-sm uppercase tracking-[0.25em] text-[#8b5e7a]" style={{ fontFamily: 'Arial, sans-serif' }}>
+                            <span>Royal Dispatch</span>
+                            <span>2026</span>
+                          </div>
+                          <div className="mt-10 text-center space-y-4">
+                            <div className="text-6xl">👑</div>
+                            <h2 className="text-3xl md:text-4xl">Lady Jasleen</h2>
+                            <p className="text-[#6c4c46] leading-relaxed" style={{ fontFamily: 'Arial, sans-serif' }}>
+                              If Bridgerton had a brilliant software heroine with elegance, wit, and a glowing heart — it would be you.
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="rounded-[1.5rem] border border-dashed border-[#c9a46b] bg-[#fff3ea] p-5">
+                          <p className="text-sm uppercase tracking-[0.18em] text-[#8b5e7a] mb-2" style={{ fontFamily: 'Arial, sans-serif' }}>
+                            Special Note
+                          </p>
+                          <p className="text-lg leading-relaxed">
+                            “May your life always feel like a grand garden ride — peaceful, powerful, and full of beautiful surprises.”
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              <section id="tribute" className="mt-16 md:mt-24">
+                <div className="text-center mb-8 md:mb-12">
+                  <p className="text-sm uppercase tracking-[0.28em] text-[#8b5e7a]" style={{ fontFamily: 'Arial, sans-serif' }}>
+                    A Royal Tribute
+                  </p>
+                  <h2 className="text-3xl md:text-5xl mt-3">Why You Shine So Bright</h2>
+                </div>
+
+                <div className="grid md:grid-cols-3 gap-6">
+                  {tributeCards.map((card) => (
+                    <div key={card.title} className="rounded-[2rem] gold-border bg-white/70 p-6 royal-glow backdrop-blur hover:-translate-y-1 transition-transform">
+                      <div className="text-4xl mb-4">{card.icon}</div>
+                      <h3 className="text-2xl mb-3">{card.title}</h3>
+                      <p className="text-[#6c4c46] leading-relaxed" style={{ fontFamily: 'Arial, sans-serif' }}>{card.text}</p>
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              <section id="ride" className="mt-16 md:mt-24 grid lg:grid-cols-2 gap-6 items-stretch">
+                <div className="rounded-[2rem] gold-border bg-gradient-to-br from-[#fff6ef] to-[#f6e7da] p-8 royal-glow">
+                  <p className="text-sm uppercase tracking-[0.28em] text-[#8b5e7a]" style={{ fontFamily: 'Arial, sans-serif' }}>
+                    Storybook Scene
+                  </p>
+                  <h2 className="text-3xl md:text-5xl mt-3">The Royal Horse Ride</h2>
+                  <p className="mt-5 text-lg leading-relaxed text-[#6c4c46]" style={{ fontFamily: 'Arial, sans-serif' }}>
+                    Imagine a golden evening, palace gardens in bloom, a soft breeze, and the sound of horse hooves across a quiet estate road. You, glowing like royalty, riding into a timeless love story with elegance and confidence.
+                  </p>
+                  <div className="mt-8 rounded-[1.5rem] bg-white/75 p-5 gold-border">
+                    <p className="text-base leading-relaxed" style={{ fontFamily: 'Arial, sans-serif' }}>
+                      This page is a tiny reminder that your energy is rare: modern enough to own the future, classic enough to belong in a royal romance.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="rounded-[2rem] gold-border bg-[#5a3045] p-8 royal-glow text-white relative overflow-hidden">
+                  <div className="absolute inset-0 opacity-10 text-[12rem] flex items-center justify-center">🐎</div>
+                  <p className="text-sm uppercase tracking-[0.28em] text-[#f2d7a6]" style={{ fontFamily: 'Arial, sans-serif' }}>
+                    For My Queen
+                  </p>
+                  <h2 className="text-3xl md:text-5xl mt-3">What Makes You Special</h2>
+                  <div className="mt-6 space-y-4">
+                    {reasons.map((reason) => (
+                      <div key={reason} className="rounded-2xl bg-white/10 p-4 backdrop-blur border border-white/10" style={{ fontFamily: 'Arial, sans-serif' }}>
+                        ✨ {reason}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </section>
+
+              <section className="mt-16 md:mt-24 pb-10">
+                <div className="rounded-[2.5rem] gold-border bg-white/70 p-8 md:p-10 royal-glow text-center">
+                  <p className="text-sm uppercase tracking-[0.28em] text-[#8b5e7a]" style={{ fontFamily: 'Arial, sans-serif' }}>
+                    Final Royal Note
+                  </p>
+                  <h2 className="text-3xl md:text-5xl mt-3">Happy Women's Day, Jasleen ❤️</h2>
+                  <p className="mt-5 max-w-3xl mx-auto text-lg md:text-xl leading-relaxed text-[#6c4c46]" style={{ fontFamily: 'Arial, sans-serif' }}>
+                    You deserve love that feels thoughtful, admiration that feels genuine, and a world that keeps celebrating the beautiful woman you are.
+                  </p>
+                  <div className="mt-8 inline-flex items-center gap-3 rounded-full bg-[#6d4157] text-white px-6 py-3 royal-glow" style={{ fontFamily: 'Arial, sans-serif' }}>
+                    <span>💐</span>
+                    <span>Made with love for Jasleen</span>
+                  </div>
+                </div>
+              </section>
+            </main>
+          </div>
+        );
+      }
+
+      ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    </script>
+  </body>
 </html>
